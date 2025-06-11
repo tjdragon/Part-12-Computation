@@ -1,0 +1,11 @@
+fastapi
+uvicorn
+aiohttp
+ecdsa
+pydantic
+aiofiles
+pytest
+pytest-asyncio
+httpx
+argparse
+flask
