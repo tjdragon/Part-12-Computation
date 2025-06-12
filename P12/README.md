@@ -128,7 +128,7 @@ python coordinator_zkp.py
 ```
 Starting Basic Coordinator with Zero-Knowledge Proofs on http://localhost:6000
 ZKP verification enabled for enhanced security
-No AI dependencies - Python implementation
+Python implementation
 ```
 
 ---
