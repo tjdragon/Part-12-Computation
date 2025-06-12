@@ -3,6 +3,8 @@
 "Part-12" is an Open Source MPC (Multi-Party Computation) in Python.  
 90% done with the help of AI, Claude & Gemini.
 
+The code, investigations brought to you by [Ilyes](https://www.linkedin.com/in/ilyes-m-195012a9/) and [Thierry](https://www.linkedin.com/in/tsjanaudy/)
+
 ## Algorithm
 
 Consider N parties involved and a threshold T.
