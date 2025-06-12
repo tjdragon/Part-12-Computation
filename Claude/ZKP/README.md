@@ -1,6 +1,6 @@
 # Basic Threshold Signature System with Zero-Knowledge Proofs
 
-This is a **pure Python implementation** of the CGGMP21 threshold signature system enhanced with Zero-Knowledge Proofs. Straightforward Python code with comprehensive ZKP capabilities and detailed logging.
+This is a **Python implementation** of the CGGMP21 threshold signature system enhanced with Zero-Knowledge Proofs. Straightforward Python code with comprehensive ZKP capabilities and detailed logging.
 
 ## 🔐 Zero-Knowledge Proof Features
 
