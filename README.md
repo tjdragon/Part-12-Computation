@@ -1,7 +1,7 @@
-# Partouze Computation
+# Part-12 Computation
 
-Open Source MPC (Multi-Party Computation) in Python.  
-90% done with the help of AI.
+"Part-12" is an Open Source MPC (Multi-Party Computation) in Python.  
+90% done with the help of AI, Claude & Gemini.
 
 ## Algorithm
 
@@ -10,6 +10,11 @@ Consider N parties involved and a threshold T.
 If N = 5 and T = 2, it means that 2 parties are required to sign the message.
 
 See [the maths](./Gemini/MPC-Maths.pdf)
+
+## Learning
+
+- See [the maths](./Gemini/MPC-Maths.pdf)
+- [ezpc](https://www.microsoft.com/en-us/research/project/ezpc-easy-secure-multi-party-computation/)
 
 ## Message flow
 
