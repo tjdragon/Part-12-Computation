@@ -1,6 +1,6 @@
 # 🔐 Zero-Knowledge Enhanced Threshold ECDSA Signature System
 
-A **pure Python implementation** of a (t,n) threshold ECDSA signature scheme enhanced with Zero-Knowledge Proofs for cryptographic integrity and security verification.
+A **Python implementation** of a (t,n) threshold ECDSA signature scheme enhanced with Zero-Knowledge Proofs for cryptographic integrity and security verification.
 
 ## 🎯 What This System Does
 
@@ -11,7 +11,7 @@ This system allows **any t out of n parties** to generate a valid ECDSA signatur
 - **🛡️ Zero Single Point of Failure**: No party ever holds the complete private key
 - **🔬 Zero-Knowledge Proofs**: Cryptographically prove honesty without revealing secrets
 - **📊 Complete Transparency**: All operations logged for learning and debugging
-- **🐍 Pure Python**: No complex dependencies - just Flask, requests, and ecdsa
+- **🐍 Python**: No complex dependencies - just Flask, requests, and ecdsa
 - **🔧 Educational Focus**: Clear code structure for understanding threshold cryptography
 
 ---
@@ -128,7 +128,7 @@ python coordinator_zkp.py
 ```
 Starting Basic Coordinator with Zero-Knowledge Proofs on http://localhost:6000
 ZKP verification enabled for enhanced security
-No AI dependencies - pure Python implementation
+No AI dependencies - Python implementation
 ```
 
 ---
@@ -751,7 +751,7 @@ This **Zero-Knowledge Enhanced Threshold ECDSA System** provides:
 - 📊 **Audit Trail**: Complete verification history
 
 ### 📚 **Educational Value**
-- 🐍 **Pure Python**: Easy to understand and modify
+- 🐍 **Python**: Easy to understand and modify
 - 📖 **Clear Documentation**: Comprehensive explanations
 - 🔍 **Transparent Logging**: All operations visible
 - 🧪 **Testable Components**: Modular verification
