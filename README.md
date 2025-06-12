@@ -15,8 +15,9 @@ See [the maths](./Gemini/MPC-Maths.pdf)
 
 ## Learning
 
-- See [the maths](./Gemini/MPC-Maths.pdf)
+- [The maths](./Gemini/MPC-Maths.pdf)
 - [ezpc](https://www.microsoft.com/en-us/research/project/ezpc-easy-secure-multi-party-computation/)
+- [Understanding the Concept of Elliptic Curve Cryptography](https://blog.laisky.com/p/ecc)
 
 ## Message flow
 
