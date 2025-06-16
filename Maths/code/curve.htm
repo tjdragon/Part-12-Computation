@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Elliptic Curve Plotter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen py-8">
+    <div class="bg-white p-6 sm:p-8 rounded-2xl shadow-lg w-full max-w-xl mx-4">
+        <div class="text-center mb-6">
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-800">Elliptic Curve Plotter & Group Law</h1>
+            <p class="text-gray-600 mt-2">
+                $y^2 = x^3 + ax + b$ and $P + Q + R = 0$
+            </p>
+        </div>
+
+        <!-- Canvas for plotting -->
+        <div class="bg-gray-50 rounded-lg overflow-hidden border border-gray-200 mb-6 relative">
+            <canvas id="curve-canvas" class="w-full"></canvas>
+        </div>
+        
+        <div class="space-y-6">
+            <!-- Curve Parameter Controls -->
+            <div class="border-t pt-6 space-y-4">
+                 <div>
+                    <label for="a-slider" class="block text-sm font-medium text-gray-700">Parameter 'a'</label>
+                    <div class="flex items-center space-x-4 mt-2">
+                        <input id="a-slider" type="range" min="-7" max="7" value="-2" step="0.1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        <span id="a-value" class="font-mono text-lg text-indigo-600 w-16 text-center">-2.0</span>
+                    </div>
+                </div>
+                <div>
+                    <label for="b-slider" class="block text-sm font-medium text-gray-700">Parameter 'b'</label>
+                    <div class="flex items-center space-x-4 mt-2">
+                        <input id="b-slider" type="range" min="-7" max="7" value="1" step="0.1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+                        <span id="b-value" class="font-mono text-lg text-indigo-600 w-16 text-center">1.0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Point Controls -->
+            <div class="border-t pt-6 space-y-4">
+                <!-- Point P Controls -->
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                         <h3 class="font-semibold text-lg" style="color: #ef4444;">Point P</h3>
+                         <button id="p-sign-toggle" class="px-3 py-1 text-sm rounded-full bg-red-100 text-red-700">y-sign: +</button>
+                    </div>
+                    <input id="p-slider" type="range" min="-5" max="5" value="-1.5" step="0.01" class="w-full h-2 bg-red-100 rounded-lg appearance-none cursor-pointer">
+                    <div id="p-coords" class="text-center font-mono text-sm text-gray-600">P = (x, y)</div>
+                </div>
+
+                <!-- Point Q Controls -->
+                <div class="space-y-3">
+                     <div class="flex items-center justify-between">
+                         <h3 class="font-semibold text-lg" style="color: #3b82f6;">Point Q</h3>
+                         <button id="q-sign-toggle" class="px-3 py-1 text-sm rounded-full bg-blue-100 text-blue-700">y-sign: +</button>
+                    </div>
+                    <input id="q-slider" type="range" min="-5" max="5" value="0.5" step="0.01" class="w-full h-2 bg-blue-100 rounded-lg appearance-none cursor-pointer">
+                    <div id="q-coords" class="text-center font-mono text-sm text-gray-600">Q = (x, y)</div>
+                </div>
+            </div>
+
+            <!-- Resultant Point R and Discriminant -->
+            <div class="border-t pt-4 text-center space-y-2">
+                <div id="addition-result-info" class="font-mono text-lg text-gray-700">P + Q = -R = (x, y)</div>
+                <div id="group-law-info" class="text-sm text-gray-600"></div>
+                <div id="discriminant-info" class="text-sm text-gray-500 mt-1"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MathJax for rendering LaTeX -->
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+    <script>
+        // --- DOM Elements ---
+        const canvas = document.getElementById('curve-canvas');
+        const ctx = canvas.getContext('2d');
+        const aSlider = document.getElementById('a-slider');
+        const bSlider = document.getElementById('b-slider');
+        const pSlider = document.getElementById('p-slider');
+        const qSlider = document.getElementById('q-slider');
+        const pSignToggle = document.getElementById('p-sign-toggle');
+        const qSignToggle = document.getElementById('q-sign-toggle');
+
+        const aValueSpan = document.getElementById('a-value');
+        const bValueSpan = document.getElementById('b-value');
+        const pCoordsSpan = document.getElementById('p-coords');
+        const qCoordsSpan = document.getElementById('q-coords');
+        const additionResultSpan = document.getElementById('addition-result-info');
+        const groupLawInfoSpan = document.getElementById('group-law-info');
+        const discriminantInfo = document.getElementById('discriminant-info');
+
+        // --- State Variables ---
+        let a = parseFloat(aSlider.value);
+        let b = parseFloat(bSlider.value);
+        let p_x = parseFloat(pSlider.value);
+        let q_x = parseFloat(qSlider.value);
+        let p_ysign = 1;
+        let q_ysign = 1;
+
+        const POINT_RADIUS = 12;
+        const xMin = -5, xMax = 5, yMin = -5, yMax = 5;
+
+        // --- Core Functions ---
+        function getCurveY(x, sign) {
+            const ySquared = x * x * x + a * x + b;
+            if (ySquared < 0) return null;
+            return sign * Math.sqrt(ySquared);
+        }
+
+        function findNearestValidX(startX) {
+            for(let x=startX; x <= xMax; x+=0.01) { if (getCurveY(x, 1) !== null) return x; }
+            for(let x=startX; x >= xMin; x-=0.01) { if (getCurveY(x, 1) !== null) return x; }
+            return startX;
+        }
+
+        function ellipticAdd(P, Q) {
+            if (!P || P.y === null) return Q;
+            if (!Q || Q.y === null) return P;
+
+            if (Math.abs(P.x - Q.x) < 1e-6 && Math.abs(P.y + Q.y) < 1e-9) {
+                return { x: null, y: null };
+            }
+
+            let m;
+            if (Math.abs(P.x - Q.x) < 1e-6 && Math.abs(P.y - Q.y) < 1e-6) {
+                if (P.y === 0) return { x: null, y: null };
+                m = (3 * P.x * P.x + a) / (2 * P.y);
+            } else {
+                m = (Q.y - P.y) / (Q.x - P.x);
+            }
+
+            if (!isFinite(m)) {
+                return { x: null, y: null };
+            }
+
+            const x_r = m * m - P.x - Q.x;
+            const y_r = -(P.y + m * (x_r - P.x));
+            
+            return { x: x_r, y: y_r };
+        }
+
+        function draw() {
+            const rect = canvas.parentElement.getBoundingClientRect();
+            canvas.width = rect.width;
+            canvas.height = rect.width * 0.75;
+            const width = canvas.width;
+            const height = canvas.height;
+            
+            ctx.clearRect(0, 0, width, height);
+
+            const xScale = width / (xMax - xMin);
+            const yScale = height / (yMax - yMin);
+            const xOffset = -xMin * xScale;
+            const yOffset = yMax * yScale;
+
+            const toCanvas = (x, y) => ({
+                cx: x * xScale + xOffset,
+                cy: yOffset - y * yScale,
+            });
+
+             const fromCanvasX = (px) => (px - xOffset) / xScale;
+            
+            // --- Draw Axes & Grid ---
+            ctx.strokeStyle = '#d1d5db';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            const origin = toCanvas(0, 0);
+            ctx.moveTo(0, origin.cy); ctx.lineTo(width, origin.cy);
+            ctx.moveTo(origin.cx, 0); ctx.lineTo(origin.cx, height);
+            ctx.stroke();
+
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            for (let i = Math.ceil(xMin); i <= Math.floor(xMax); i++) {
+                if(i === 0) continue;
+                const { cx } = toCanvas(i, 0); ctx.moveTo(cx, 0); ctx.lineTo(cx, height);
+            }
+            for (let i = Math.ceil(yMin); i <= Math.floor(yMax); i++) {
+                 if(i === 0) continue;
+                const { cy } = toCanvas(0, i); ctx.moveTo(0, cy); ctx.lineTo(width, cy);
+            }
+            ctx.stroke();
+
+            // --- Draw Elliptic Curve ---
+            ctx.strokeStyle = '#4f46e5';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            let firstPoint = true;
+            for (let px = 0; px < width; px++) {
+                const x = fromCanvasX(px);
+                const y = getCurveY(x, 1);
+                if (y !== null) {
+                    const { cx, cy } = toCanvas(x, y);
+                    if (firstPoint) { ctx.moveTo(cx, cy); firstPoint = false; } else { ctx.lineTo(cx, cy); }
+                } else { firstPoint = true; ctx.stroke(); ctx.beginPath(); }
+            }
+            ctx.stroke();
+            ctx.beginPath();
+            firstPoint = true;
+            for (let px = 0; px < width; px++) {
+                const x = fromCanvasX(px);
+                const y = getCurveY(x, -1);
+                if (y !== null) {
+                    const { cx, cy } = toCanvas(x, y);
+                    if (firstPoint) { ctx.moveTo(cx, cy); firstPoint = false; } else { ctx.lineTo(cx, cy); }
+                } else { firstPoint = true; ctx.stroke(); ctx.beginPath(); }
+            }
+            ctx.stroke();
+
+            // --- Calculate and Draw Points ---
+            const p = { x: p_x, y: getCurveY(p_x, p_ysign) };
+            const q = { x: q_x, y: getCurveY(q_x, q_ysign) };
+            const addition_result = ellipticAdd(p, q); // This is -R
+            const r_point = {x: addition_result.x, y: addition_result.y !== null ? -addition_result.y : null}; // This is R, the third intersection
+            
+            // Draw lines for group law
+            if (p.y !== null && q.y !== null) {
+                ctx.setLineDash([4, 4]);
+                ctx.strokeStyle = 'rgba(150, 150, 150, 0.6)';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                const p_c = toCanvas(p.x, p.y);
+                
+                let m;
+                if (Math.abs(p.x - q.x) < 1e-6 && Math.abs(p.y + q.y) < 1e-6) {
+                    ctx.moveTo(p_c.cx, 0); ctx.lineTo(p_c.cx, height);
+                } else {
+                    if (Math.abs(p.x - q.x) < 1e-6 && Math.abs(p.y - q.y) < 1e-6) {
+                        m = (3 * p.x * p.x + a) / (2 * p.y);
+                    } else {
+                         m = (q.y - p.y) / (q.x - p.x);
+                    }
+                    const y1 = m * (xMin - p.x) + p.y;
+                    const y2 = m * (xMax - p.x) + p.y;
+                    const c1 = toCanvas(xMin, y1);
+                    const c2 = toCanvas(xMax, y2);
+                    ctx.moveTo(c1.cx, c1.cy); ctx.lineTo(c2.cx, c2.cy);
+                }
+                ctx.stroke();
+                
+                // Line from R to -R
+                if(r_point.x !== null) {
+                    ctx.strokeStyle = 'rgba(22, 163, 74, 0.6)';
+                    const r_c = toCanvas(r_point.x, r_point.y);
+                    const neg_r_c = toCanvas(addition_result.x, addition_result.y);
+                    ctx.beginPath();
+                    ctx.moveTo(r_c.cx, r_c.cy);
+                    ctx.lineTo(neg_r_c.cx, neg_r_c.cy);
+                    ctx.stroke();
+                }
+                ctx.setLineDash([]);
+            }
+
+            // Function to draw a point
+            function drawPoint(point, color, label) {
+                if (point && point.y !== null) {
+                    const { cx, cy } = toCanvas(point.x, point.y);
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, POINT_RADIUS, 0, 2 * Math.PI);
+                    ctx.fill();
+                    ctx.fillStyle = '#fff';
+                    ctx.font = 'bold 20px Inter';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(label, cx, cy);
+                }
+            }
+            
+            // Draw points with the new labeling convention
+            drawPoint(r_point, '#16a34a', 'R'); // Collinear point is R
+            drawPoint(p, '#ef4444', 'P');
+            drawPoint(q, '#3b82f6', 'Q');
+            drawPoint(addition_result, 'rgba(100,100,100,0.8)', '-R'); // Reflection is -R
+            
+
+            // --- Update UI Text ---
+            pCoordsSpan.textContent = `P = (${p.x.toFixed(2)}, ${p.y !== null ? p.y.toFixed(2) : 'N/A'})`;
+            qCoordsSpan.textContent = `Q = (${q.x.toFixed(2)}, ${q.y !== null ? q.y.toFixed(2) : 'N/A'})`;
+            additionResultSpan.innerHTML = `<span style="font-weight: bold;">P + Q = -R</span> = (${addition_result.x !== null ? addition_result.x.toFixed(2) : '∞'}, ${addition_result.y !== null ? addition_result.y.toFixed(2) : '∞'})`;
+            groupLawInfoSpan.innerHTML = 'P, Q, and R are collinear, so <strong>P + Q + R = 0</strong>';
+
+            const delta = -16 * (4 * a * a * a + 27 * b * b);
+            let msg;
+            if (Math.abs(delta) < 1e-3) msg = 'Discriminant ≈ 0 (singularity)';
+            else if (delta > 0) msg = 'Δ > 0 (two components)';
+            else msg = 'Δ < 0 (one component)';
+            discriminantInfo.textContent = `Discriminant Δ = ${delta.toFixed(1)}. ${msg}`;
+        }
+        
+        // --- Event Handlers ---
+        function handleParamChange() {
+            a = parseFloat(aSlider.value);
+            b = parseFloat(bSlider.value);
+            aValueSpan.textContent = a.toFixed(1);
+            bValueSpan.textContent = b.toFixed(1);
+            
+            p_x = findNearestValidX(p_x);
+            pSlider.value = p_x;
+            q_x = findNearestValidX(q_x);
+            qSlider.value = q_x;
+            
+            draw();
+        }
+
+        aSlider.addEventListener('input', handleParamChange);
+        bSlider.addEventListener('input', handleParamChange);
+        pSlider.addEventListener('input', (e) => { p_x = parseFloat(e.target.value); draw(); });
+        qSlider.addEventListener('input', (e) => { q_x = parseFloat(e.target.value); draw(); });
+        pSignToggle.addEventListener('click', () => { p_ysign *= -1; pSignToggle.textContent = `y-sign: ${p_ysign > 0 ? '+' : '-'}`; draw(); });
+        qSignToggle.addEventListener('click', () => { q_ysign *= -1; qSignToggle.textContent = `y-sign: ${q_ysign > 0 ? '+' : '-'}`; draw(); });
+        window.addEventListener('resize', draw);
+        
+        // Initial setup
+        handleParamChange();
+
+    </script>
+</body>
+</html>
