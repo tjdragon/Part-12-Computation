@@ -118,7 +118,7 @@ Signing involves the following steps:
 3. Then compute $k$, such that $k = CSPRNG(1, n)$  a cryptographically secure pseudorandom number generator between 1 and n
 4. Calculate $Q_{x,y} = k . G$
 5. Calculate $r = Q_{x} \mod n$ (if r is 0, go back to step 3)
-6. Calculated $s = k^{-1}  (e + r . d) \mod n$ (if s is 0 go back to step 3)
+6. Calculate $s = k^{-1}  (e + r . d) \mod n$ (if s is 0 go back to step 3)
 
 - $P$ is the public key
 - $(r, s)$ is the signature
@@ -297,7 +297,7 @@ This step is almost identical to the initial DKG, but this time the goal is to c
 -  A subgroup of at least t participants who are taking part in the signing ceremony (let's call them the signing group) each secretly chooses a random number, $\lambda_j$
 -  Each participant $P_j$ in the signing group creates a secret polynomial of degree $t−1$, let's call it $h_j(x)$, where the constant term is their chosen random number: $h_j(0)=\lambda_j$
 - Each participant $P_j$ computes shares $\omega_{ji} = h_j(i)$ for every other participant $P_i$ in the signing group and distributes them.
-- Each participant $P_i$vsums the shares they received to get their share of the final nonce: $k_i = \sum \omega_{ji}$
+- Each participant $P_i$ sums the shares they received to get their share of the final nonce: $k_i = \sum \omega_{ji}$
 
 The result is that each signing participant $i$ holds a share $k_i$ of a secret nonce $k$.
 
